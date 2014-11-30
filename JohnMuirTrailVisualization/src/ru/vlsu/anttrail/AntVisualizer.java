@@ -23,7 +23,7 @@ public class AntVisualizer extends JFrame {
       splitPane.setDividerLocation(650);
       getContentPane().add(splitPane);
       setDefaultCloseOperation(EXIT_ON_CLOSE);
-      setSize(1000, 650);
+      setSize(900, 900);
       setVisible(true);
 	}
 

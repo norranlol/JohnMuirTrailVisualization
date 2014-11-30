@@ -19,7 +19,7 @@ public class RunPanel extends JPanel {
 	private Runnable run;
     
 	private static ImageIcon getIcon(String s) {
-        return new ImageIcon(RunPanel.class.getResource("/" + s));
+        return new ImageIcon(RunPanel.class.getResource("/resources/" + s));
     }
 	
 	private void setEnabled(){

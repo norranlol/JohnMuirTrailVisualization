@@ -7,35 +7,43 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 
 import ru.vlsu.anttrail.event.TrailEvent;
 import ru.vlsu.anttrail.event.TrailListener;
+import ru.vlsu.anttrail.model.Location;
 import ru.vlsu.anttrail.model.Orientation;
 import ru.vlsu.anttrail.model.Snapshot;
 import ru.vlsu.anttrail.model.TrailData;
 import ru.vlsu.ga.data.AntParameters;
+import ru.vlsu.ga.data.MapReader;
 
 public class AntTrailComponent extends JComponent implements TrailListener {
 	
 	private final TrailData trailData;
 	
-	private final static ImageIcon FOOD_IMGS = getIcon("food.png");
-	private final static ImageIcon ANT_RIGHT = getIcon("antRight.png");
-	private final static ImageIcon ANT_DOWN = getIcon("antDown.png");
-	private final static ImageIcon ANT_LEFT = getIcon("antLeft.png");
-	private final static ImageIcon ANT_UP = getIcon("antUp.png");
+	private final static ImageIcon FOOD_IMGS = getIcon("food.jpg");
+	private final static ImageIcon ANT_RIGHT = getIcon("antRight.jpg");
+	private final static ImageIcon ANT_DOWN = getIcon("antDown.jpg");
+	private final static ImageIcon ANT_LEFT = getIcon("antLeft.jpg");
+	private final static ImageIcon ANT_UP = getIcon("antUp.jpg");
+	private MapReader mapReader = new MapReader();
+	private int[][] mapOfFood;
+	ArrayList<Location> locations;
 
     private static ImageIcon getIcon(String s) {
-        return new ImageIcon(AntTrailComponent.class.getResource("/" + s));
+        return new ImageIcon(AntTrailComponent.class.getResource("/resources/" + s));
     }
     
     public AntTrailComponent(TrailData trailData)
     {
     	this.trailData = trailData;
     	trailData.addTrailDataListener(this);
+    	mapOfFood = mapReader.getMap();
+    	locations = convertMapToLocations();
     }
     
     public void paintComponent(Graphics g){
@@ -48,12 +56,12 @@ public class AntTrailComponent extends JComponent implements TrailListener {
     	final double dy = 1.0 * this.getHeight() / AntParameters.DIMENSION_M;
     	
     	//Прорисовываем бэкграунд
-    	g2d.setColor(Color.GRAY);
+    	g2d.setColor(Color.GREEN);
     	g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
     	
     	int x, y;
     	
-    	g2d.setColor(Color.LIGHT_GRAY);
+    	g2d.setColor(Color.BLACK);
     	
     	for (int i = 0; i < AntParameters.DIMENSION_N; i++){
           y = (int) (dy * i + dy);
@@ -64,6 +72,16 @@ public class AntTrailComponent extends JComponent implements TrailListener {
     		x = (int) (dx * i + dx);
     		g2d.drawLine(x, 0, x, this.getHeight());
     	}
+    	
+    	//Прорисовка еды  	
+    	for (Location location : locations){
+    		x = (int) (location.getX() * dx);
+    		y = (int) (location.getY() * dy);
+    		 g.drawImage(FOOD_IMGS.getImage(), x, y, (int) dx, (int) dy, null);
+    	}
+    	
+    	//Прорисовка муравья
+    	deleteFoodFromFoodMap(currentSnapshot.getLocation());
     	
         x = (int) (dx * currentSnapshot.getLocation().getX());
         y = (int) (dy * currentSnapshot.getLocation().getY());
@@ -77,6 +95,7 @@ public class AntTrailComponent extends JComponent implements TrailListener {
         else if (currentSnapshot.getOrientation().getSideTitle().equals(Orientation.UP_SIDE))
         	resultIcon = ANT_UP;
         g2d.drawImage(resultIcon.getImage(), x, y, (int) dx, (int) dy, null);
+        
         drawScore(g2d); 	
     }
     
@@ -99,5 +118,29 @@ public class AntTrailComponent extends JComponent implements TrailListener {
 	@Override
 	public void modelChanged(TrailEvent event) {
         repaint();
+	}
+	
+	private ArrayList<Location> convertMapToLocations(){
+    	ArrayList<Location> locations = new ArrayList<Location>();  	
+    	for (int i = 0; i < AntParameters.DIMENSION_N; i++){
+    		for (int j = 0; j < AntParameters.DIMENSION_M; j++){
+    			if (mapOfFood[i][j] == 1){
+    				Location location = new Location(j, i);
+    				locations.add(location);
+    			}
+    		}
+    	}
+    	return locations;
+	}
+	
+	private void deleteFoodFromFoodMap(Location location){
+		int index = -1;
+		for (int i = 0; i < locations.size(); i++){
+			if (locations.get(i).getX() == location.getX() && 
+					locations.get(i).getY() == location.getY())
+				index = i;
+		}
+		if (index != -1)
+			locations.remove(index);
 	}
 }
