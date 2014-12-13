@@ -1,5 +1,6 @@
 package ru.vlsu.anttrail.model;
 
+import java.awt.Point;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,63 +11,62 @@ import javax.swing.event.EventListenerList;
 
 import ru.vlsu.anttrail.event.TrailEvent;
 import ru.vlsu.anttrail.event.TrailListener;
+import vlsu.ga.data.MapReader;
+import vlsu.ga.model.Action;
+import vlsu.ga.model.Ant;
+import vlsu.ga.model.AntLandscape;
+import vlsu.ga.model.Orientation;
+import vlsu.ga.model.StateMachine;
+import vlsu.ga.model.Transition;
+import vlsu.ga.utils.BitStringUtils;
 
 public class TrailData {
 
 	private int act;
 	private final ArrayList<Snapshot> snapshots = new ArrayList<Snapshot>();
 	private final EventListenerList listOfListeners = new EventListenerList();
+	private ArrayList<Point> foodList;
 
-	public TrailData(){
-		Scanner scanner = null;
-		List<String> listOfRows = new ArrayList<String>();
-		try {
-			scanner = new Scanner(new File("snapshots.txt"));
-			while (scanner.hasNextLine())
-				listOfRows.add(scanner.nextLine());
-		} catch (Exception e){
-			e.printStackTrace();
+	public TrailData(String automataString){
+		MapReader mapReader = new MapReader();
+    	foodList = mapReader.getListOfFoods();
+		automataString = BitStringUtils.convertBitVectorIndividualToBitString(automataString);
+		StateMachine stateMachine = BitStringUtils.createStateMachineFromBitString(automataString);
+		AntLandscape antLandscape = new AntLandscape(foodList);
+		Ant ant = new Ant(stateMachine, antLandscape);
+		
+		int initialState = stateMachine.getInitialState();
+		int currentState = -1;
+		
+		while (ant.getTimeSteps() < ant.getMaxTimeSteps()){
+			Transition[] transitions = ant.getTransitionArray();
+			if (ant.getTimeSteps() == 0){
+				currentState = initialState;
+				Snapshot snap = new Snapshot(new Location(ant.getxLocation(), ant.getyLocation()),
+						Orientation.EAST, ant.getFoodEaten());
+				snapshots.add(snap);
+			}
+			
+			Transition transition = ant.findTransitionWithThisCurrentState(transitions, currentState);
+			
+			String action = transition.getAction().getCurrentAction();
+			
+			if (action.equals(Action.ACTION_MOVE)){
+				ant.move();
+			} else if (action.equals(Action.ACTION_TURN_LEFT)){
+				ant.turnLeft();
+			} else if (action.equals(Action.ACTION_TURN_RIGHT)){
+				ant.turnRight();
+			} else if (action.equals(Action.ACTION_NOP)){
+				ant.skip();
+			}
+			currentState = transition.getToStateNumber();
+			
+			Snapshot snapshot = new Snapshot(new Location(ant.getxLocation(), ant.getyLocation()),
+					ant.getOrientation(), ant.getFoodEaten());
+			snapshots.add(snapshot);
 		}
-		Snapshot snapshot = new Snapshot();
-		int xLocation = -1;
-		int yLocation = -1;
-		int dxOrientation = -1;
-		int dyOrientation = -1;
-	    for (String str : listOfRows){
-	    	if (str.startsWith("XLocation")){
-	    		xLocation = parseStringByEqually(str);
-	    	} else if (str.startsWith("YLocation")){
-		    	yLocation = parseStringByEqually(str);
-	    	} else if (str.startsWith("DXOrientation")){
-		    	dxOrientation = parseStringByEqually(str);
-	    	} else if (str.startsWith("DYOrientation")){
-		    	dyOrientation = parseStringByEqually(str);
-	    	} else if (str.startsWith("Score")){
-		    	int score = parseStringByEqually(str);
-		    	snapshot.setScore(score);
-	    	} else if (str.startsWith("=============")){
-	    		Location location = new Location(xLocation, yLocation);
-	    		Orientation orientation = new Orientation(dxOrientation, dyOrientation);
-	    		snapshot.setLocation(location);
-	    		snapshot.setOrientation(orientation);
-	    		snapshots.add(snapshot);
-	            xLocation = -1;
-	            yLocation = -1;
-	            dxOrientation = -1;
-	            dyOrientation = -1;
-	            snapshot = new Snapshot();
-	    	}
-	     }
 	}
-	
-	private int parseStringByEqually(String str){
-    	String[] masOfStr = str.split(Pattern.quote(" = "));
-    	if (masOfStr.length > 1){
-    		int digit = Integer.valueOf(masOfStr[1]);
-    		return digit;
-    	}
-    	return -1;
-    }
 	
 	public void addTrailDataListener(TrailListener listener){
 		listOfListeners.add(TrailListener.class, listener);

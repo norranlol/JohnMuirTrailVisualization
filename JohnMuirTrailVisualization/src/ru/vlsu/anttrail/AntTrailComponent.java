@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.util.ArrayList;
 
@@ -14,12 +15,11 @@ import javax.swing.JComponent;
 
 import ru.vlsu.anttrail.event.TrailEvent;
 import ru.vlsu.anttrail.event.TrailListener;
-import ru.vlsu.anttrail.model.Location;
-import ru.vlsu.anttrail.model.Orientation;
 import ru.vlsu.anttrail.model.Snapshot;
 import ru.vlsu.anttrail.model.TrailData;
-import ru.vlsu.ga.data.AntParameters;
-import ru.vlsu.ga.data.MapReader;
+import vlsu.ga.data.AntParameters;
+import vlsu.ga.data.MapReader;
+import vlsu.ga.model.Orientation;
 
 public class AntTrailComponent extends JComponent implements TrailListener {
 	
@@ -31,8 +31,7 @@ public class AntTrailComponent extends JComponent implements TrailListener {
 	private final static ImageIcon ANT_LEFT = getIcon("antLeft.jpg");
 	private final static ImageIcon ANT_UP = getIcon("antUp.jpg");
 	private MapReader mapReader = new MapReader();
-	private int[][] mapOfFood;
-	ArrayList<Location> locations;
+	ArrayList<Point> foodList;
 
     private static ImageIcon getIcon(String s) {
         return new ImageIcon(AntTrailComponent.class.getResource("/resources/" + s));
@@ -42,8 +41,7 @@ public class AntTrailComponent extends JComponent implements TrailListener {
     {
     	this.trailData = trailData;
     	trailData.addTrailDataListener(this);
-    	mapOfFood = mapReader.getMap();
-    	locations = convertMapToLocations();
+    	foodList = mapReader.getListOfFoods();
     }
     
     public void paintComponent(Graphics g){
@@ -52,8 +50,8 @@ public class AntTrailComponent extends JComponent implements TrailListener {
     	Graphics2D g2d = (Graphics2D) g;
     	Snapshot currentSnapshot = trailData.getSnapshot();
     	
-    	final double dx = 1.0 * this.getWidth() / AntParameters.DIMENSION_N;
-    	final double dy = 1.0 * this.getHeight() / AntParameters.DIMENSION_M;
+    	final double dx = 1.0 * this.getWidth() / AntParameters.DIMENSION_M;
+    	final double dy = 1.0 * this.getHeight() / AntParameters.DIMENSION_N;
     	
     	//Прорисовываем бэкграунд
     	g2d.setColor(Color.GREEN);
@@ -63,36 +61,36 @@ public class AntTrailComponent extends JComponent implements TrailListener {
     	
     	g2d.setColor(Color.BLACK);
     	
-    	for (int i = 0; i < AntParameters.DIMENSION_N; i++){
-          y = (int) (dy * i + dy);
-          g2d.drawLine(0, y, this.getWidth(), y);
-    	}
-    	
     	for (int i = 0; i < AntParameters.DIMENSION_M; i++) {
     		x = (int) (dx * i + dx);
     		g2d.drawLine(x, 0, x, this.getHeight());
     	}
     	
-    	//Прорисовка еды  	
-    	for (Location location : locations){
-    		x = (int) (location.getX() * dx);
-    		y = (int) (location.getY() * dy);
-    		 g.drawImage(FOOD_IMGS.getImage(), x, y, (int) dx, (int) dy, null);
-    	}
+    	for (int i = 0; i < AntParameters.DIMENSION_N; i++){
+            y = (int) (dy * i + dy);
+            g2d.drawLine(0, y, this.getWidth(), y);
+      	}
     	
-    	//Прорисовка муравья
-    	deleteFoodFromFoodMap(currentSnapshot.getLocation());
+    	for (Point point : foodList){
+    		x = (int) (point.getX() * dx);
+    		y = (int) (point.getY() * dy);
+    		g.drawImage(FOOD_IMGS.getImage(), x, y, (int) dx, (int) dy, null);
+    	}
     	
         x = (int) (dx * currentSnapshot.getLocation().getX());
         y = (int) (dy * currentSnapshot.getLocation().getY());
+        
+        removeFoodLocation(new Point(currentSnapshot.getLocation().getX(),
+        		currentSnapshot.getLocation().getY()));
+        
         ImageIcon resultIcon = null;
-        if (currentSnapshot.getOrientation().getSideTitle().equals(Orientation.RIGHT_SIDE))
+        if (currentSnapshot.getOrientation() == Orientation.EAST)
         	resultIcon = ANT_RIGHT;
-        else if (currentSnapshot.getOrientation().getSideTitle().equals(Orientation.LEFT_SIDE))
+        else if (currentSnapshot.getOrientation() == Orientation.WEST)
         	resultIcon = ANT_LEFT;
-        else if (currentSnapshot.getOrientation().getSideTitle().equals(Orientation.DOWN_SIDE))
+        else if (currentSnapshot.getOrientation() == Orientation.SOUTH)
         	resultIcon = ANT_DOWN;
-        else if (currentSnapshot.getOrientation().getSideTitle().equals(Orientation.UP_SIDE))
+        else if (currentSnapshot.getOrientation() == Orientation.NORTH)
         	resultIcon = ANT_UP;
         g2d.drawImage(resultIcon.getImage(), x, y, (int) dx, (int) dy, null);
         
@@ -120,27 +118,7 @@ public class AntTrailComponent extends JComponent implements TrailListener {
         repaint();
 	}
 	
-	private ArrayList<Location> convertMapToLocations(){
-    	ArrayList<Location> locations = new ArrayList<Location>();  	
-    	for (int i = 0; i < AntParameters.DIMENSION_N; i++){
-    		for (int j = 0; j < AntParameters.DIMENSION_M; j++){
-    			if (mapOfFood[i][j] == 1){
-    				Location location = new Location(j, i);
-    				locations.add(location);
-    			}
-    		}
-    	}
-    	return locations;
-	}
-	
-	private void deleteFoodFromFoodMap(Location location){
-		int index = -1;
-		for (int i = 0; i < locations.size(); i++){
-			if (locations.get(i).getX() == location.getX() && 
-					locations.get(i).getY() == location.getY())
-				index = i;
-		}
-		if (index != -1)
-			locations.remove(index);
+	public void removeFoodLocation(final Point food){
+		foodList.remove(food);
 	}
 }

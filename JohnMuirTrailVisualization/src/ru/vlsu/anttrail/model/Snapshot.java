@@ -1,5 +1,7 @@
 package ru.vlsu.anttrail.model;
 
+import vlsu.ga.model.Orientation;
+
 public class Snapshot {
 	
     private Location location;

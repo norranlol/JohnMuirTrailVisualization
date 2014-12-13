@@ -8,10 +8,11 @@ import ru.vlsu.anttrail.model.TrailData;
 
 public class AntVisualizer extends JFrame {
 	
+	private static final String automataString = "0111000100001110000000010010101000";
 	private final TrailData trailData;
 
 	public AntVisualizer(){
-		this(new TrailData());
+		this(new TrailData(automataString));
 	}
 	
 	public AntVisualizer(TrailData trailData){
