@@ -92,25 +92,7 @@ public class AntTrailComponent extends JComponent implements TrailListener {
         	resultIcon = ANT_DOWN;
         else if (currentSnapshot.getOrientation() == Orientation.NORTH)
         	resultIcon = ANT_UP;
-        g2d.drawImage(resultIcon.getImage(), x, y, (int) dx, (int) dy, null);
-        
-        drawScore(g2d); 	
-    }
-    
-    private void drawScore(Graphics2D g2d) {
-        int score = trailData.getSnapshot().getScore();
-        int act = trailData.getAct();
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        Font font = new Font(g2d.getFont().getName(), 0, 40);
-        g2d.setFont(font);
-        FontMetrics fm = g2d.getFontMetrics();
-        String s = (new StringBuilder()).append(score).append(" / ").append(act).toString();
-        int width = fm.stringWidth(s);
-        int height = fm.getAscent();
-        g2d.setColor(Color.BLUE);
-        g2d.setComposite(AlphaComposite.getInstance(3, 0.5f));
-        g2d.drawString(s, getWidth() / 2 - width / 2, getHeight() / 2 + height / 2);
-        g2d.setComposite(AlphaComposite.getInstance(3, 1.0f));
+        g2d.drawImage(resultIcon.getImage(), x, y, (int) dx, (int) dy, null);	
     }
 
 	@Override

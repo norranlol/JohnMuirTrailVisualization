@@ -11,6 +11,7 @@ import javax.swing.event.EventListenerList;
 
 import ru.vlsu.anttrail.event.TrailEvent;
 import ru.vlsu.anttrail.event.TrailListener;
+import vlsu.ga.data.AntParameters;
 import vlsu.ga.data.MapReader;
 import vlsu.ga.model.Action;
 import vlsu.ga.model.Ant;
