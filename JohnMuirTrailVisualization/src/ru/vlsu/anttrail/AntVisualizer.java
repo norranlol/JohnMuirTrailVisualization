@@ -5,10 +5,12 @@ import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
 import ru.vlsu.anttrail.model.TrailData;
+import vlsu.ga.utils.FileUtils;
 
 public class AntVisualizer extends JFrame {
 	
-	private static final String automataString = "0111000100001110000000010010101000";
+	private static String automataString = "";
+	
 	private final TrailData trailData;
 
 	public AntVisualizer(){
@@ -29,6 +31,7 @@ public class AntVisualizer extends JFrame {
 	}
 
     public static void main(String [] args) {
+    	automataString = FileUtils.getBitstringFromFile();
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new AntVisualizer();
